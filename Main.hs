@@ -209,7 +209,7 @@ xmrWidget =
   newQr xmrAddress
 
 newDrv :: URI -> StSync -> Drv
-newDrv uri sts =
+newDrv uri sst =
   Drv
     { drvHomeUri =
         URI.render
@@ -224,15 +224,15 @@ newDrv uri sts =
     newUri x =
       URI.render
         . updateUri uri
-        $ sts & stSyncMode .~ x
+        $ sst & stSyncMode .~ x
 
 updateUri :: URI -> StSync -> URI
-updateUri uri sts =
+updateUri uri sst =
   --
   -- TODO : reasonable 404
   --
   fromRight uri $ do
-    crt0 <- first SomeException $ unStSync sts
+    crt0 <- first SomeException $ unStSync sst
     crt1 <- URI.mkQueryValue crt0
     pure $
       uri
@@ -393,7 +393,8 @@ updateModel _ Noop st = do
         pure Noop
 updateModel uri Init st = do
   st <# do
-    replaceUriAction uri st
+    let drv = newDrv uri $ st ^. stSync
+    replaceUriAction drv st
     pure Noop
 updateModel _ PrintPdf st =
   st <# do
@@ -404,8 +405,9 @@ updateModel uri (SetField someLens val) st0 = do
         st0
           & stSync . unSomeLens someLens .~ fromMisoString val
   st1 <# do
-    replaceUriAction uri st1
-    ast <- newStAsync uri st1
+    let drv = newDrv uri $ st1 ^. stSync
+    replaceUriAction drv st1
+    ast <- newStAsync drv st1
     pure $ SetAsync ast
 updateModel uri (DupField someLens idx0) st0 = do
   let st1 =
@@ -416,8 +418,9 @@ updateModel uri (DupField someLens idx0) st0 = do
                  if idx0 == idx1 then [x, x] else [x]
              )
   st1 <# do
-    replaceUriAction uri st1
-    ast <- newStAsync uri st1
+    let drv = newDrv uri $ st1 ^. stSync
+    replaceUriAction drv st1
+    ast <- newStAsync drv st1
     pure $ SetAsync ast
 updateModel uri (DelField someLens idx0) st0 = do
   let st1 =
@@ -428,8 +431,9 @@ updateModel uri (DelField someLens idx0) st0 = do
                  if idx0 == idx1 then [] else [x]
              )
   st1 <# do
-    replaceUriAction uri st1
-    ast <- newStAsync uri st1
+    let drv = newDrv uri $ st1 ^. stSync
+    replaceUriAction drv st1
+    ast <- newStAsync drv st1
     pure $ SetAsync ast
 updateModel uri (SetAsync ast) st0 = do
   let st1 =
@@ -437,29 +441,27 @@ updateModel uri (SetAsync ast) st0 = do
           then st0 & stAsync .~ ast
           else st0
   st1 <# do
-    replaceUriAction uri st1
+    let drv = newDrv uri $ st1 ^. stSync
+    replaceUriAction drv st1
     pure Noop
 
-replaceUriAction :: URI -> St -> JSM ()
-replaceUriAction uri st =
+replaceUriAction :: Drv -> St -> JSM ()
+replaceUriAction drv st =
   whenJust
     ( parseURI
         . T.unpack
-        . ( case st ^. stSync . stSyncMode of
-              View -> drvViewUri
-              Edit -> drvEditUri
-          )
-        . newDrv uri
-        $ st ^. stSync
+        $ case st ^. stSync . stSyncMode of
+          View -> drvViewUri drv
+          Edit -> drvEditUri drv
     )
     replaceURI
 
-newStAsync :: (MonadIO m) => URI -> St -> m StAsync
-newStAsync uri st =
+newStAsync :: (MonadIO m) => Drv -> St -> m StAsync
+newStAsync drv st =
   liftIO $ do
     let src = st ^. stSync
     cancel $ st ^. stAsync . stAsyncMid
-    mid <- async . pure . newQr . drvViewUri $ newDrv uri src
+    mid <- async . pure . newQr $ drvViewUri drv
     pure
       StAsync
         { _stAsyncSrc = src,
@@ -637,10 +639,10 @@ infoIndex ::
   StSync ->
   SomeLens StSync [Info] ->
   [(Int, Info, SomeLens StSync [Info])]
-infoIndex sts someLens =
+infoIndex sst someLens =
   fmap (\(idx, val) -> (idx, val, someLens))
     . zip [0 :: Int ..]
-    $ sts ^. (unSomeLens someLens)
+    $ sst ^. (unSomeLens someLens)
 
 viewDonate :: [View Action]
 viewDonate =
