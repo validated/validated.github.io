@@ -445,7 +445,10 @@ replaceUriAction uri st =
   whenJust
     ( parseURI
         . T.unpack
-        . derEditUri
+        . ( case st ^. stSync . stSyncMode of
+              View -> derViewUri
+              Edit -> derEditUri
+          )
         . newDerived uri
         $ st ^. stSync
     )
@@ -490,7 +493,7 @@ copyClipboard txt =
     [ class_ "stack button text-center clipboardjs",
       textProp "data-clipboard-text" $ toMisoString txt
     ]
-    [ text "Copy \128203"
+    [ kbd_ mempty [text "Copy \128203"]
     ]
 
 viewLinks :: Derived -> [View Action]
@@ -512,7 +515,7 @@ viewLinks der =
                     href_ $ derHomeUri der,
                     target_ "_blank"
                   ]
-                  [ text "Home \127968"
+                  [ kbd_ mempty [text "Home \127968"]
                   ]
               ],
             div_
@@ -522,7 +525,7 @@ viewLinks der =
                   [ class_ "stack button text-center",
                     onClick PrintPdf
                   ]
-                  [ text "Save \128190"
+                  [ kbd_ mempty [text "Save \128190"]
                   ]
               ],
             div_
@@ -533,7 +536,7 @@ viewLinks der =
                     href_ $ derViewUri der,
                     target_ "_blank"
                   ]
-                  [ text "View \128065"
+                  [ kbd_ mempty [text "View \128065"]
                   ]
               ],
             div_
@@ -550,7 +553,7 @@ viewLinks der =
                     href_ "https://github.com/validated/validated.github.io",
                     target_ "_blank"
                   ]
-                  [ text "Code \128187"
+                  [ kbd_ mempty [text "Code \128187"]
                   ]
               ],
             div_
@@ -561,7 +564,7 @@ viewLinks der =
                     href_ "static/readme.html",
                     target_ "_blank"
                   ]
-                  [ text "Info \128712"
+                  [ kbd_ mempty [text "Info \128712"]
                   ]
               ]
           ]
