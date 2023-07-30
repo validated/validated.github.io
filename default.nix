@@ -17,12 +17,15 @@ with (import (builtins.fetchTarball {
   });
   publish = modern-pkgs.writeShellApplication rec {
     name = "publish";
-    text = ''
+    text = let
+      vsn = app.passthru.version;
+    in ''
       (
         cd ${repo}
-        mkdir -p ./docs
         nix-build -A publishDer
-        cp -RL ./result/* ./docs
+        mkdir -p ./docs/${vsn}
+        cp -RL ./result/${vsn}/* ./docs/${vsn}
+        cp -RLf ./result/index.html ./docs/index.html
       )
     '';
   };

@@ -1,0 +1,338 @@
+code size summary per package:
+
+aeson-1.4.5.0-4XBDrdLtHFPGlEVHqFy2zI:284949
+app-0.2.0.0-5MTBTmBFVra7C5HH0g5fQl:3494
+async-2.2.2-K25YEoQPN5X4D5XXzP2Zfp:5132
+attoparsec-0.13.2.3-EartgkLegnZEC7CniDWra9:33351
+base:                    428431
+base64-bytestring-1.0.0.2-KHbHJJf4UE22MWUN8WJjSN:61284
+binary-0.8.6.0-H5jYuYqJeOLDt7eFZnyaWc:13272
+bmp-1.2.6.3-65QrmK3lNmg8sb1QrKUROX:67318
+bytestring-0.10.8.2-FBklFuapa1a7kq4yflY7Bt:99762
+containers-0.6.0.1-BAqcfV1UBBeCIRjPbUYeSG:65235
+dlist-0.8.0.7-693TJQOGF0mrdIYAHhexA:6383
+ghc-prim:                221347
+ghcjs-base-0.2.0.0-EhegR3BglaFCRhhwSkzfiq:36453
+ghcjs-prim-0.1.1.0-EXzjGVHQlAS2XAXcu0iCbS:3499
+integer-gmp:             59911
+integer-logarithms-1.0.3-8EbIvyaPt1VK2rKaCK88I2:1273
+jsaddle-0.9.7.0-7hFnhwsPV31F5XLui7OjNQ:4367
+main:                    3793
+megaparsec-7.0.5-J0KenJAyj3qShyXUs28I4:168765
+miso-1.8.3.0-LiFk2o6MlsBHIfRzjIifDS:515055
+modern-uri-0.3.1.0-9Xj5KzQvz9OAqEhE6qMW24:146093
+network-uri-2.6.1.0-AXUWDGZX7KMJoBmHCpAUoc:11373
+parsec-3.1.13.0-B5rilSKpqzU4t8cguYXeJQ:18187
+primitive-0.6.4.0-3x0GB2ASNry3lELHxqAIDT:30954
+qrcode-core-0.9.1-8I413aNsMda7Lkj3ZS0xsL:213035
+scientific-0.3.6.2-7JhE7B8V4WfLrWZrlQBQiG:744023
+tagsoup-0.14.8-Ga7WGvMMojPLQkXD6zO6rL:125638
+text-1.2.3.1-2mMWCa8HNEL4R4p8nnvwO2:49585
+transformers-0.5.6.2-KaPP0fdMTwBF02jPgfEE5s:996
+unordered-containers-0.2.10.0-5S9RZGYebRKDeHs4xD77Eu:1992
+vector-0.12.0.3-7cJzWgCDWzw3XAC0ebWEtO:151931
+
+
+code size per module:
+
+aeson-1.4.5.0-4XBDrdLtHFPGlEVHqFy2zI
+    Data.Aeson.Encoding.Builder:        3531
+    Data.Aeson.Encoding.Internal:       164897
+    Data.Aeson.Parser.Internal:         38208
+    Data.Aeson.Parser.UnescapePure:     53320
+    Data.Aeson.Types.FromJSON:          1
+    Data.Aeson.Types.Generic:           8719
+    Data.Aeson.Types.Internal:          1218
+    Data.Aeson.Types.ToJSON:            15055
+
+app-0.2.0.0-5MTBTmBFVra7C5HH0g5fQl
+    QR:                                 3494
+
+async-2.2.2-K25YEoQPN5X4D5XXzP2Zfp
+    Control.Concurrent.Async:           5132
+
+attoparsec-0.13.2.3-EartgkLegnZEC7CniDWra9
+    Data.Attoparsec.ByteString.Buffer:  7163
+    Data.Attoparsec.ByteString.Char8:   23819
+    Data.Attoparsec.ByteString.Internal:576
+    Data.Attoparsec.ByteString.Lazy:    381
+    Data.Attoparsec.Internal:           1
+    Data.Attoparsec.Internal.Types:     1411
+
+base
+    Control.Exception.Base:             1213
+    Data.Char:                          1
+    Data.Either:                        106
+    Data.Functor.Const:                 120
+    Data.Functor.Identity:              345
+    Data.List.NonEmpty:                 434
+    Data.Maybe:                         7650
+    Data.OldList:                       1
+    Data.Proxy:                         4915
+    Data.Semigroup.Internal:            41643
+    Data.Typeable.Internal:             250
+    Data.Void:                          2506
+    Debug.Trace:                        9726
+    Foreign.C.Error:                    874
+    Foreign.Marshal.Alloc:              2503
+    Foreign.Storable:                   2338
+    GHC.Arr:                            5499
+    GHC.Base:                           308
+    GHC.Char:                           5743
+    GHC.Conc.Sync:                      12816
+    GHC.Enum:                           703
+    GHC.Err:                            5219
+    GHC.Exception:                      2326
+    GHC.Exception.Type:                 4997
+    GHC.Fingerprint:                    319
+    GHC.Fingerprint.Type:               35910
+    GHC.Float:                          10702
+    GHC.Foreign:                        325
+    GHC.ForeignPtr:                     1
+    GHC.Generics:                       1221
+    GHC.IO:                             441
+    GHC.IO.Buffer:                      1
+    GHC.IO.BufferedIO:                  329
+    GHC.IO.Device:                      396
+    GHC.IO.Encoding:                    592
+    GHC.IO.Encoding.Failure:            1
+    GHC.IO.Encoding.Types:              57897
+    GHC.IO.Encoding.UTF8:               10988
+    GHC.IO.Exception:                   25325
+    GHC.IO.FD:                          274
+    GHC.IO.Handle:                      4738
+    GHC.IO.Handle.FD:                   23262
+    GHC.IO.Handle.Internals:            1838
+    GHC.IO.Handle.Types:                157
+    GHC.IORef:                          373
+    GHC.Int:                            7403
+    GHC.List:                           1
+    GHC.MVar:                           113
+    GHC.Maybe:                          1313
+    GHC.Num:                            113
+    GHC.Ptr:                            8198
+    GHC.Read:                           9876
+    GHC.Real:                           787
+    GHC.ST:                             1
+    GHC.STRef:                          21010
+    GHC.Show:                           3890
+    GHC.Stack.CCS:                      488
+    GHC.Stack.Types:                    8946
+    GHC.TopHandler:                     1734
+    GHC.Unicode:                        8887
+    GHC.Word:                           3434
+    Numeric:                            13427
+    System.Posix.Internals:             12543
+    Text.ParserCombinators.ReadP:       1
+    Text.ParserCombinators.ReadPrec:    772
+    Text.Read:                          34794
+    Text.Read.Lex:                      3374
+
+base64-bytestring-1.0.0.2-KHbHJJf4UE22MWUN8WJjSN
+    Data.ByteString.Base64:             28337
+    Data.ByteString.Base64.Internal:    617
+    Data.ByteString.Base64.Lazy:        1106
+    Data.ByteString.Base64.URL:         31224
+
+binary-0.8.6.0-H5jYuYqJeOLDt7eFZnyaWc
+    Data.Binary.Class:                  4717
+    Data.Binary.Get:                    4482
+    Data.Binary.Get.Internal:           1795
+    Data.Binary.Put:                    2278
+
+bmp-1.2.6.3-65QrmK3lNmg8sb1QrKUROX
+    Codec.BMP:                          1
+    Codec.BMP.Base:                     1
+    Codec.BMP.BitmapInfo:               31959
+    Codec.BMP.BitmapInfoV3:             3089
+    Codec.BMP.BitmapInfoV4:             1876
+    Codec.BMP.BitmapInfoV5:             2244
+    Codec.BMP.CIEXYZ:                   3611
+    Codec.BMP.Compression:              8266
+    Codec.BMP.Error:                    2383
+    Codec.BMP.FileHeader:               9433
+    Codec.BMP.Pack:                     4455
+
+bytestring-0.10.8.2-FBklFuapa1a7kq4yflY7Bt
+    Data.ByteString:                    1349
+    Data.ByteString.Builder:            11455
+    Data.ByteString.Builder.ASCII:      16294
+    Data.ByteString.Builder.Internal:   6931
+    Data.ByteString.Builder.Prim:       1
+    Data.ByteString.Builder.Prim.Internal:3817
+    Data.ByteString.Builder.Prim.Internal.Base16:14635
+    Data.ByteString.Internal:           4721
+    Data.ByteString.Lazy:               2414
+    Data.ByteString.Lazy.Internal:      38145
+
+containers-0.6.0.1-BAqcfV1UBBeCIRjPbUYeSG
+    Data.Map.Internal:                  20665
+    Data.Sequence.Internal:             44434
+    Data.Set.Internal:                  136
+
+dlist-0.8.0.7-693TJQOGF0mrdIYAHhexA
+    Data.DList:                         6383
+
+ghc-prim
+    GHC.CString:                        6626
+    GHC.Classes:                        139
+    GHC.IntWord64:                      1747
+    GHC.Tuple:                          125
+    GHC.Types:                          212710
+
+ghcjs-base-0.2.0.0-EhegR3BglaFCRhhwSkzfiq
+    Data.JSString:                      1
+    Data.JSString.Internal.Fusion.Common:1
+    Data.JSString.Internal.Fusion.Types:110
+    Data.JSString.Internal.Type:        143
+    Data.JSString.Text:                 578
+    GHCJS.Foreign.Internal:             32064
+    GHCJS.Marshal:                      1
+    GHCJS.Marshal.Internal:             170
+    GHCJS.Marshal.Pure:                 1
+    JavaScript.Array.Internal:          892
+    JavaScript.Web.AnimationFrame:      2492
+
+ghcjs-prim-0.1.1.0-EXzjGVHQlAS2XAXcu0iCbS
+    GHCJS.Prim:                         2222
+    GHCJS.Prim.Internal:                1277
+
+integer-gmp
+    GHC.Integer.Logarithms.Internals:   58073
+    GHC.Integer.Type:                   1838
+
+integer-logarithms-1.0.3-8EbIvyaPt1VK2rKaCK88I2
+    Math.NumberTheory.Logarithms:       1273
+
+jsaddle-0.9.7.0-7hFnhwsPV31F5XLui7OjNQ
+    Language.Javascript.JSaddle.Arguments:1
+    Language.Javascript.JSaddle.Marshal.String:1858
+    Language.Javascript.JSaddle.Object: 379
+    Language.Javascript.JSaddle.Value:  2129
+
+main
+    Main:                               3793
+
+megaparsec-7.0.5-J0KenJAyj3qShyXUs28I4
+    Text.Megaparsec:                    60055
+    Text.Megaparsec.Error:              8503
+    Text.Megaparsec.Internal:           5402
+    Text.Megaparsec.Pos:                3088
+    Text.Megaparsec.State:              52048
+    Text.Megaparsec.Stream:             39669
+
+miso-1.8.3.0-LiFk2o6MlsBHIfRzjIifDS
+    Miso:                               1
+    Miso.Concurrent:                    888
+    Miso.Delegate:                      4076
+    Miso.Diff:                          1
+    Miso.Effect:                        3077
+    Miso.Event.Decoder:                 19945
+    Miso.Event.Types:                   17171
+    Miso.FFI:                           2563
+    Miso.FFI.History:                   1963
+    Miso.Html.Element:                  304
+    Miso.Html.Event:                    794
+    Miso.Html.Property:                 30959
+    Miso.Html.Types:                    1307
+    Miso.String:                        491
+    Miso.Subscription.History:          431515
+
+modern-uri-0.3.1.0-9Xj5KzQvz9OAqEhE6qMW24
+    Text.URI.Parser.Text:               7544
+    Text.URI.Parser.Text.Utils:         36935
+    Text.URI.Render:                    27834
+    Text.URI.Types:                     73780
+
+network-uri-2.6.1.0-AXUWDGZX7KMJoBmHCpAUoc
+    Network.URI:                        11373
+
+parsec-3.1.13.0-B5rilSKpqzU4t8cguYXeJQ
+    Text.Parsec.Char:                   7391
+    Text.Parsec.Combinator:             4231
+    Text.Parsec.Error:                  277
+    Text.Parsec.Pos:                    6287
+    Text.Parsec.Prim:                   1
+
+primitive-0.6.4.0-3x0GB2ASNry3lELHxqAIDT
+    Control.Monad.Primitive:            1
+    Data.Primitive.Array:               1
+    Data.Primitive.ByteArray:           191
+    Data.Primitive.Types:               30761
+
+qrcode-core-0.9.1-8I413aNsMda7Lkj3ZS0xsL
+    Codec.QRCode.Code.Data:             60231
+    Codec.QRCode.Code.Image:            6127
+    Codec.QRCode.Code.Intermediate:     34916
+    Codec.QRCode.Code.Mask:             13238
+    Codec.QRCode.Code.ReedSolomonEncoder:7064
+    Codec.QRCode.Data.ByteStreamBuilder:9792
+    Codec.QRCode.Data.ErrorLevel:       8661
+    Codec.QRCode.Data.MQRImage:         1675
+    Codec.QRCode.Data.Mask:             1
+    Codec.QRCode.Data.QRCodeOptions:    141
+    Codec.QRCode.Data.QRImage:          1
+    Codec.QRCode.Data.QRIntermediate.Internal:1745
+    Codec.QRCode.Data.QRSegment.Internal:1
+    Codec.QRCode.Data.TextEncoding:     104
+    Codec.QRCode.Data.ToInput:          5617
+    Codec.QRCode.Data.Version:          12057
+    Codec.QRCode.Mode.Alphanumeric:     1273
+    Codec.QRCode.Mode.Automatic:        6344
+    Codec.QRCode.Mode.Byte:             2360
+    Codec.QRCode.Mode.ECI:              2668
+    Codec.QRCode.Mode.Kanji:            2644
+    Codec.QRCode.Mode.Numeric:          36375
+
+scientific-0.3.6.2-7JhE7B8V4WfLrWZrlQBQiG
+    Data.ByteString.Builder.Scientific: 21847
+    Data.Scientific:                    3216
+    Utils:                              718960
+
+tagsoup-0.14.8-Ga7WGvMMojPLQkXD6zO6rL
+    Text.HTML.TagSoup.Entity:           44222
+    Text.HTML.TagSoup.Implementation:   934
+    Text.HTML.TagSoup.Manual:           1
+    Text.HTML.TagSoup.Options:          53137
+    Text.HTML.TagSoup.Specification:    4074
+    Text.HTML.TagSoup.Tree:             1
+    Text.HTML.TagSoup.Type:             398
+    Text.StringLike:                    22871
+
+text-1.2.3.1-2mMWCa8HNEL4R4p8nnvwO2
+    Data.Text:                          569
+    Data.Text.Array:                    6933
+    Data.Text.Encoding:                 2294
+    Data.Text.Encoding.Error:           966
+    Data.Text.Internal:                 1017
+    Data.Text.Internal.Builder:         414
+    Data.Text.Internal.Builder.Int.Digits:1349
+    Data.Text.Internal.Fusion.CaseMapping:4319
+    Data.Text.Internal.Fusion.Common:   411
+    Data.Text.Internal.Fusion.Size:     352
+    Data.Text.Internal.Fusion.Types:    264
+    Data.Text.Internal.Lazy:            861
+    Data.Text.Lazy:                     10364
+    Data.Text.Lazy.Builder.Int:         1
+    Data.Text.Lazy.Builder.RealFloat:   10294
+    Data.Text.Show:                     97
+    Data.Text.Unsafe:                   9080
+
+transformers-0.5.6.2-KaPP0fdMTwBF02jPgfEE5s
+    Control.Monad.Trans.State.Strict:   996
+
+unordered-containers-0.2.10.0-5S9RZGYebRKDeHs4xD77Eu
+    Data.HashMap.Array:                 1757
+    Data.HashMap.Base:                  235
+
+vector-0.12.0.3-7cJzWgCDWzw3XAC0ebWEtO
+    Data.Vector:                        3213
+    Data.Vector.Internal.Check:         504
+    Data.Vector.Mutable:                1
+    Data.Vector.Primitive:              1
+    Data.Vector.Primitive.Mutable:      148212
+
+
+
+packed metadata: 2405091
+
