@@ -181,8 +181,8 @@ newSt uri =
         . async
         . pure
         . newQr
-        . derViewUri
-        $ newDerived uri sst
+        . drvViewUri
+        $ newDrv uri sst
     pure
       St
         { _stSync = sst,
@@ -194,10 +194,10 @@ newSt uri =
               }
         }
 
-data Derived = Derived
-  { derHomeUri :: Text,
-    derViewUri :: Text,
-    derEditUri :: Text
+data Drv = Drv
+  { drvHomeUri :: Text,
+    drvViewUri :: Text,
+    drvEditUri :: Text
   }
   deriving stock (Eq, Ord, Show, Generic)
 
@@ -208,17 +208,17 @@ xmrWidget :: Maybe Text
 xmrWidget =
   newQr xmrAddress
 
-newDerived :: URI -> StSync -> Derived
-newDerived uri sts =
-  Derived
-    { derHomeUri =
+newDrv :: URI -> StSync -> Drv
+newDrv uri sts =
+  Drv
+    { drvHomeUri =
         URI.render
           uri
             { URI.uriPath = Nothing,
               URI.uriQuery = mempty
             },
-      derViewUri = newUri View,
-      derEditUri = newUri Edit
+      drvViewUri = newUri View,
+      drvEditUri = newUri Edit
     }
   where
     newUri x =
@@ -446,10 +446,10 @@ replaceUriAction uri st =
     ( parseURI
         . T.unpack
         . ( case st ^. stSync . stSyncMode of
-              View -> derViewUri
-              Edit -> derEditUri
+              View -> drvViewUri
+              Edit -> drvEditUri
           )
-        . newDerived uri
+        . newDrv uri
         $ st ^. stSync
     )
     replaceURI
@@ -459,7 +459,7 @@ newStAsync uri st =
   liftIO $ do
     let src = st ^. stSync
     cancel $ st ^. stAsync . stAsyncMid
-    mid <- async . pure . newQr . derViewUri $ newDerived uri src
+    mid <- async . pure . newQr . drvViewUri $ newDrv uri src
     pure
       StAsync
         { _stAsyncSrc = src,
@@ -478,14 +478,14 @@ viewApp uri st =
     [ link_ [rel_ "stylesheet", href_ "static/picnic.min.css"],
       link_ [rel_ "stylesheet", href_ "static/app.css"],
       case st ^. stSync . stSyncMode of
-        Edit -> viewEditor der st
+        Edit -> viewEditor drv st
         View -> viewModel st,
       script_ [src_ "static/clipboard.min.js"] mempty,
       script_ [src_ "static/patch.js", defer_ "defer"] mempty,
       script_ [src_ "static/app.js", defer_ "defer"] mempty
     ]
   where
-    der = newDerived uri $ st ^. stSync
+    drv = newDrv uri $ st ^. stSync
 
 copyClipboard :: Text -> View Action
 copyClipboard txt =
@@ -496,8 +496,8 @@ copyClipboard txt =
     [ kbd_ mempty [text "Copy \128203"]
     ]
 
-viewLinks :: Derived -> [View Action]
-viewLinks der =
+viewLinks :: Drv -> [View Action]
+viewLinks drv =
   [ div_
       [class_ "stack label"]
       [text "Links"],
@@ -512,7 +512,7 @@ viewLinks der =
               ]
               [ a_
                   [ class_ "stack button text-center",
-                    href_ $ derHomeUri der,
+                    href_ $ drvHomeUri drv,
                     target_ "_blank"
                   ]
                   [ kbd_ mempty [text "Home \127968"]
@@ -533,7 +533,7 @@ viewLinks der =
               ]
               [ a_
                   [ class_ "stack button text-center",
-                    href_ $ derViewUri der,
+                    href_ $ drvViewUri drv,
                     target_ "_blank"
                   ]
                   [ kbd_ mempty [text "View \128065"]
@@ -543,7 +543,7 @@ viewLinks der =
               [ class_ "full half-1100"
               ]
               [ copyClipboard $
-                  derEditUri der
+                  drvEditUri drv
               ],
             div_
               [ class_ "full half-1100"
@@ -571,13 +571,13 @@ viewLinks der =
       ]
   ]
 
-viewEditor :: Derived -> St -> View Action
-viewEditor der st =
+viewEditor :: Drv -> St -> View Action
+viewEditor drv st =
   div_
     [class_ "flex one four-700"]
     [ div_
         [class_ "one-fourth-700 no-print"]
-        $ viewLinks der
+        $ viewLinks drv
           <> [div_ [class_ "stack label"] [text "Editor"]]
           <> viewEditorSidebar (st ^. stSync)
           <> [div_ [class_ "stack-bottom"] mempty],
