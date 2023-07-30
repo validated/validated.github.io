@@ -58,6 +58,7 @@ executable app
   build-depends:
     , aeson
     , app
+    , async
     , base
     , base-prelude
     , base64-bytestring
@@ -71,6 +72,7 @@ executable app
     , network-uri
     , qrcode-core
     , text
+    , transformers
 
   if !impl(ghcjs)
     build-depends:

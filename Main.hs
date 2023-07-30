@@ -17,7 +17,9 @@ import qualified Codec.QRCode as QR
     defaultQRCodeOptions,
     encodeAutomatic,
   )
+import Control.Concurrent.Async (Async, async, cancel, poll)
 import Control.Monad.Extra (whenJust)
+import Control.Monad.Trans.Except (except, runExceptT)
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Base64.URL as B64URL
 import qualified Data.ByteString.Lazy as BL
@@ -51,14 +53,27 @@ import qualified Text.URI.QQ as URI hiding (uri)
 -- Model
 --
 
-data Model = Model
-  { _modMode :: Mode,
-    _modInfoTop :: [Info],
-    _modInfoMid :: [Info],
-    _modInfoLhs :: [Info],
-    _modInfoRhs :: [Info]
+data St = St
+  { _stSync :: StSync,
+    _stAsync :: StAsync
+  }
+  deriving stock (Eq, Ord, Generic)
+
+data StSync = StSync
+  { _stSyncMode :: Mode,
+    _stSyncInfoTop :: [Info],
+    _stSyncInfoMid :: [Info],
+    _stSyncInfoLhs :: [Info],
+    _stSyncInfoRhs :: [Info]
   }
   deriving stock (Eq, Ord, Show, Generic)
+
+data StAsync = StAsync
+  { _stAsyncSrc :: StSync,
+    _stAsyncMid :: Async (Maybe Text),
+    _stAsyncDst :: Maybe Text
+  }
+  deriving stock (Eq, Ord, Generic)
 
 data Mode = View | Edit
   deriving stock (Eq, Ord, Show, Generic)
@@ -69,36 +84,38 @@ data Info = Info
   }
   deriving stock (Eq, Ord, Show, Generic)
 
-instance A.ToJSON Model
+instance A.ToJSON StSync
 
 instance A.ToJSON Mode
 
 instance A.ToJSON Info
 
-instance A.FromJSON Model
+instance A.FromJSON StSync
 
 instance A.FromJSON Mode
 
 instance A.FromJSON Info
 
-makeLenses ''Model
+makeLenses ''St
+makeLenses ''StSync
+makeLenses ''StAsync
 makeLenses ''Info
 
-defModel :: Model
-defModel =
-  Model
-    { _modMode = Edit,
-      _modInfoTop =
+defStSync :: StSync
+defStSync =
+  StSync
+    { _stSyncMode = Edit,
+      _stSyncInfoTop =
         [ Info "Logo" "static/tequila-shot.png",
           Info "Issuer" "Ministry of Tequila",
           Info "Title" "Tequila Consumption Certificate"
         ],
-      _modInfoMid =
+      _stSyncInfoMid =
         [ Info
             "Summary"
             "This individual has received all required Tequila shots \10004"
         ],
-      _modInfoLhs =
+      _stSyncInfoLhs =
         [ Info
             "Surname(s) and forename(s)"
             "John Dough",
@@ -112,7 +129,7 @@ defModel =
             "Passport or other identification document number"
             "DN1234567"
         ],
-      _modInfoRhs =
+      _stSyncInfoRhs =
         [ Info
             "Plant or crop targeted"
             "Blue Agave",
@@ -140,31 +157,59 @@ defModel =
         ]
     }
 
-newModel :: URI.URI -> Either String Model
-newModel uri =
+newStSync :: URI.URI -> Either String StSync
+newStSync uri =
   case asumMap (qsGet qkCrt) $ URI.uriQuery uri of
-    Nothing -> pure defModel
+    Nothing -> pure defStSync
     Just st0 -> do
       st1 <- B64URL.decode $ TE.encodeUtf8 st0
       A.eitherDecode $ BL.fromStrict st1
 
-unModel :: Model -> Either TE.UnicodeException Text
-unModel =
+unStSync :: StSync -> Either TE.UnicodeException Text
+unStSync =
   TE.decodeUtf8'
     . B64URL.encode
     . BL.toStrict
     . A.encode
 
+newSt :: (MonadIO m) => URI.URI -> m (Either String St)
+newSt uri =
+  runExceptT $ do
+    sst <- except $ newStSync uri
+    aqr <-
+      liftIO
+        . async
+        . pure
+        . newQr
+        . derViewUri
+        $ newDerived uri sst
+    pure
+      St
+        { _stSync = sst,
+          _stAsync =
+            StAsync
+              { _stAsyncSrc = sst,
+                _stAsyncMid = aqr,
+                _stAsyncDst = Nothing
+              }
+        }
+
 data Derived = Derived
   { derHomeUri :: Text,
     derViewUri :: Text,
-    derEditUri :: Text,
-    derAddrXmr :: Text
+    derEditUri :: Text
   }
   deriving stock (Eq, Ord, Show, Generic)
 
-newDerived :: URI -> Model -> Derived
-newDerived uri st =
+xmrAddress :: Text
+xmrAddress = "88XdfpP1mcNDykiA9xuv6afhgw3Arg5zNYayvVycJbS6UpdiZrTQHpQebFG9LmkKm6QYkRB68VVyiAq4FtBgYvu9LLUMPgn"
+
+xmrWidget :: Maybe Text
+xmrWidget =
+  newQr xmrAddress
+
+newDerived :: URI -> StSync -> Derived
+newDerived uri sts =
   Derived
     { derHomeUri =
         URI.render
@@ -173,19 +218,21 @@ newDerived uri st =
               URI.uriQuery = mempty
             },
       derViewUri = newUri View,
-      derEditUri = newUri Edit,
-      derAddrXmr = "88XdfpP1mcNDykiA9xuv6afhgw3Arg5zNYayvVycJbS6UpdiZrTQHpQebFG9LmkKm6QYkRB68VVyiAq4FtBgYvu9LLUMPgn"
+      derEditUri = newUri Edit
     }
   where
-    newUri x = URI.render . updateUri uri $ st & modMode .~ x
+    newUri x =
+      URI.render
+        . updateUri uri
+        $ sts & stSyncMode .~ x
 
-updateUri :: URI -> Model -> URI
-updateUri uri x =
+updateUri :: URI -> StSync -> URI
+updateUri uri sts =
   --
   -- TODO : reasonable 404
   --
   fromRight uri $ do
-    crt0 <- first SomeException $ unModel x
+    crt0 <- first SomeException $ unStSync sts
     crt1 <- URI.mkQueryValue crt0
     pure $
       uri
@@ -199,12 +246,13 @@ updateUri uri x =
 main :: IO ()
 main = runApp $ do
   uri <- URI.mkURI . T.pack . show =<< getCurrentURI
-  case newModel uri of
+  res <- newSt uri
+  case res of
     Left e -> fail e
-    Right x -> do
+    Right st ->
       startApp
         App
-          { model = x,
+          { model = st,
             update = updateModel uri,
             view = viewApp uri,
             subs = mempty,
@@ -322,13 +370,27 @@ data Action
   = Noop
   | Init
   | PrintPdf
-  | SetField (SomeLens Model Text) MisoString
-  | DupField (SomeLens Model [Info]) Int
-  | DelField (SomeLens Model [Info]) Int
+  | SetField (SomeLens StSync Text) MisoString
+  | DupField (SomeLens StSync [Info]) Int
+  | DelField (SomeLens StSync [Info]) Int
+  | SetAsync StAsync
 
-updateModel :: URI -> Action -> Model -> Effect Action Model
-updateModel _ Noop st =
-  noEff st
+updateModel ::
+  URI ->
+  Action ->
+  St ->
+  Effect Action St
+updateModel _ Noop st = do
+  st <# do
+    let ast = st ^. stAsync
+    res <- liftIO . poll $ st ^. stAsync . stAsyncMid
+    case res of
+      Just (Right dst)
+        | ast ^. stAsyncSrc == st ^. stSync
+            && ast ^. stAsyncDst /= dst ->
+          pure . SetAsync $ ast & stAsyncDst .~ dst
+      _ ->
+        pure Noop
 updateModel uri Init st = do
   st <# do
     replaceUriAction uri st
@@ -340,63 +402,87 @@ updateModel _ PrintPdf st =
 updateModel uri (SetField someLens val) st0 = do
   let st1 =
         st0
-          & unSomeLens someLens
-          .~ fromMisoString val
+          & stSync . unSomeLens someLens .~ fromMisoString val
   st1 <# do
     replaceUriAction uri st1
-    pure Noop
+    ast <- newStAsync uri st1
+    pure $ SetAsync ast
 updateModel uri (DupField someLens idx0) st0 = do
   let st1 =
         st0
-          & unSomeLens someLens
+          & stSync . unSomeLens someLens
           %~ ( \xs -> do
                  (idx1, x) <- zip [0 ..] xs
                  if idx0 == idx1 then [x, x] else [x]
              )
   st1 <# do
     replaceUriAction uri st1
-    pure Noop
+    ast <- newStAsync uri st1
+    pure $ SetAsync ast
 updateModel uri (DelField someLens idx0) st0 = do
   let st1 =
         st0
-          & unSomeLens someLens
+          & stSync . unSomeLens someLens
           %~ ( \xs -> do
                  (idx1, x) <- zip [0 ..] xs
                  if idx0 == idx1 then [] else [x]
              )
   st1 <# do
     replaceUriAction uri st1
+    ast <- newStAsync uri st1
+    pure $ SetAsync ast
+updateModel uri (SetAsync ast) st0 = do
+  let st1 =
+        if st0 ^. stSync == ast ^. stAsyncSrc
+          then st0 & stAsync .~ ast
+          else st0
+  st1 <# do
+    replaceUriAction uri st1
     pure Noop
 
-replaceUriAction :: URI -> Model -> JSM ()
+replaceUriAction :: URI -> St -> JSM ()
 replaceUriAction uri st =
   whenJust
     ( parseURI
         . T.unpack
         . derEditUri
-        $ newDerived uri st
+        . newDerived uri
+        $ st ^. stSync
     )
     replaceURI
+
+newStAsync :: (MonadIO m) => URI -> St -> m StAsync
+newStAsync uri st =
+  liftIO $ do
+    let src = st ^. stSync
+    cancel $ st ^. stAsync . stAsyncMid
+    mid <- async . pure . newQr . derViewUri $ newDerived uri src
+    pure
+      StAsync
+        { _stAsyncSrc = src,
+          _stAsyncMid = mid,
+          _stAsyncDst = Nothing
+        }
 
 --
 -- View
 --
 
-viewApp :: URI -> Model -> View Action
-viewApp uri x =
+viewApp :: URI -> St -> View Action
+viewApp uri st =
   div_
     mempty
     [ link_ [rel_ "stylesheet", href_ "static/picnic.min.css"],
       link_ [rel_ "stylesheet", href_ "static/app.css"],
-      case x ^. modMode of
-        Edit -> viewEditor der x
-        View -> viewModel der x,
+      case st ^. stSync . stSyncMode of
+        Edit -> viewEditor der st
+        View -> viewModel st,
       script_ [src_ "static/clipboard.min.js"] mempty,
       script_ [src_ "static/patch.js", defer_ "defer"] mempty,
       script_ [src_ "static/app.js", defer_ "defer"] mempty
     ]
   where
-    der = newDerived uri x
+    der = newDerived uri $ st ^. stSync
 
 copyClipboard :: Text -> View Action
 copyClipboard txt =
@@ -482,26 +568,25 @@ viewLinks der =
       ]
   ]
 
-viewEditor :: Derived -> Model -> View Action
-viewEditor der x =
+viewEditor :: Derived -> St -> View Action
+viewEditor der st =
   div_
     [class_ "flex one four-700"]
     [ div_
         [class_ "one-fourth-700 no-print"]
         $ viewLinks der
           <> [div_ [class_ "stack label"] [text "Editor"]]
-          <> viewEditorSidebar x
+          <> viewEditorSidebar (st ^. stSync)
           <> [div_ [class_ "stack-bottom"] mempty],
       div_
         [class_ "three-fourth-700 grow"]
-        [ viewModel der x,
-          div_ [class_ "one no-print"] $
-            viewDonate der
+        [ viewModel st,
+          div_ [class_ "one no-print"] viewDonate
         ]
     ]
 
-viewEditorSidebar :: Model -> [View Action]
-viewEditorSidebar x =
+viewEditorSidebar :: StSync -> [View Action]
+viewEditorSidebar sst =
   ( \(idx, info, someLens) ->
       [ textarea_
           [ class_ "stack",
@@ -539,23 +624,23 @@ viewEditorSidebar x =
           ]
       ]
   )
-    =<< ( infoIndex x (SomeLens modInfoTop)
-            <> infoIndex x (SomeLens modInfoMid)
-            <> infoIndex x (SomeLens modInfoLhs)
-            <> infoIndex x (SomeLens modInfoRhs)
+    =<< ( infoIndex sst (SomeLens stSyncInfoTop)
+            <> infoIndex sst (SomeLens stSyncInfoMid)
+            <> infoIndex sst (SomeLens stSyncInfoLhs)
+            <> infoIndex sst (SomeLens stSyncInfoRhs)
         )
 
 infoIndex ::
-  Model ->
-  SomeLens Model [Info] ->
-  [(Int, Info, SomeLens Model [Info])]
-infoIndex x someLens =
+  StSync ->
+  SomeLens StSync [Info] ->
+  [(Int, Info, SomeLens StSync [Info])]
+infoIndex sts someLens =
   fmap (\(idx, val) -> (idx, val, someLens))
     . zip [0 :: Int ..]
-    $ x ^. (unSomeLens someLens)
+    $ sts ^. (unSomeLens someLens)
 
-viewDonate :: Derived -> [View Action]
-viewDonate der =
+viewDonate :: [View Action]
+viewDonate =
   [ div_
       [class_ "stack label"]
       [text "Donate Monero (XMR)"],
@@ -563,13 +648,13 @@ viewDonate der =
       [ class_ "stack stack-middle"
       ]
       [ row_
-          [div_ [class_ "qr long-text"] [text $ derAddrXmr der]]
+          [div_ [class_ "qr long-text"] [text xmrAddress]]
       ],
     div_
       [ class_ "stack stack-middle"
       ]
       [ row_
-          [div_ [class_ "qr"] [copyClipboard $ derAddrXmr der]]
+          [div_ [class_ "qr"] [copyClipboard xmrAddress]]
       ]
   ]
     <> ( maybeToList $
@@ -581,11 +666,11 @@ viewDonate der =
                        [img_ [class_ "qr", src_ qr]]
                    ]
              )
-             (newQr $ derAddrXmr der)
+             xmrWidget
        )
 
-viewModel :: Derived -> Model -> View Action
-viewModel der x =
+viewModel :: St -> View Action
+viewModel st0 =
   div_
     [ class_ "flex one center"
     ]
@@ -629,20 +714,22 @@ viewModel der x =
                                   [class_ "text-center"]
                                   [text txt]
                     )
-                  $ x ^. modInfoTop
+                  $ st1 ^. stSyncInfoTop
               ]
-                <> ( maybeToList
-                       . fmap
-                         ( \qr ->
-                             half_
-                               [ div_
-                                   [class_ "flex one center"]
-                                   [img_ [class_ "qr", src_ qr]]
-                               ]
-                         )
-                       . newQr
-                       $ derViewUri der
-                   )
+                <> [ half_
+                       [ div_
+                           [class_ "flex one center"]
+                           $ maybe
+                             [ div_
+                                 [class_ "lds-dual-ring"]
+                                 mempty
+                             ]
+                             ( \qr ->
+                                 [img_ [class_ "qr", src_ qr]]
+                             )
+                             $ st0 ^. stAsync . stAsyncDst
+                       ]
+                   ]
           ]
           <> fmap
             ( \info ->
@@ -656,13 +743,15 @@ viewModel der x =
                       ]
                   ]
             )
-            (x ^. modInfoMid)
+            (st1 ^. stSyncInfoMid)
           <> [ row_
-                 [ half_ . viewInfo $ x ^. modInfoLhs,
-                   half_ . viewInfo $ x ^. modInfoRhs
+                 [ half_ . viewInfo $ st1 ^. stSyncInfoLhs,
+                   half_ . viewInfo $ st1 ^. stSyncInfoRhs
                  ]
              ]
     ]
+  where
+    st1 = st0 ^. stSync
 
 viewInfo :: [Info] -> [View Action]
 viewInfo =
