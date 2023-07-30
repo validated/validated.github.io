@@ -11,6 +11,7 @@ with (import (builtins.fetchTarball {
     postInstall = ''
       mkdir -p $out/bin/app.jsexe/static
       cp -R ${./static}/* $out/bin/app.jsexe/static
+      cp ${./static}/favicon.ico $out/bin/app.jsexe/favicon.ico
       rm $out/bin/app.jsexe/static/readme.html || true
       cp ${readmeDer}/readme.html $out/bin/app.jsexe/static/
     '';
@@ -25,6 +26,7 @@ with (import (builtins.fetchTarball {
         nix-build -A publishDer
         mkdir -p ./docs/${vsn}
         cp -RL ./result/${vsn}/* ./docs/${vsn}
+        cp -RLf ./result/${vsn}/favicon.ico ./docs/favicon.ico
         cp -RLf ./result/index.html ./docs/index.html
       )
     '';
